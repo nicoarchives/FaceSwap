@@ -3,6 +3,8 @@ import cv2
 import logging
 import argparse
 
+from tqdm import tqdm
+
 from face_detection import select_face
 from face_swap import face_swap
 
@@ -15,19 +17,24 @@ class VideoHandler(object):
             exit(-1)
         self.args = args
         self.video = cv2.VideoCapture(video_path)
+        self.video.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'));
         self.writer = cv2.VideoWriter(args.save_path, cv2.VideoWriter_fourcc(*'MJPG'), self.video.get(cv2.CAP_PROP_FPS),
                                       (int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
     def start(self):
+        i = 1
+        frame_count = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
+        pbar = tqdm(total = frame_count)
         while self.video.isOpened():
+            pbar.update(i)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
             _, dst_img = self.video.read()
-            dst_points, dst_shape, dst_face = select_face(dst_img, choose=False)
-            if dst_points is not None:
-                dst_img = face_swap(self.src_face, dst_face, self.src_points, dst_points, dst_shape, dst_img, self.args, 68)
-            self.writer.write(dst_img)
+            #dst_points, dst_shape, dst_face = select_face(dst_img, choose=False)
+            #if dst_points is not None:
+            #    dst_img = face_swap(self.src_face, dst_face, self.src_points, dst_points, dst_shape, dst_img, self.args, 68)
+            #self.writer.write(dst_img)
             if self.args.show:
                 cv2.imshow("Video", dst_img)
 
